@@ -1,0 +1,81 @@
+@startuml
+
+interface Energy {
+    + calculateEnergy(specificValue: double): double
+}
+
+class WaterEnergy {
+    - waterWheelSize: double
+    + WaterEnergy(waterWheelSize: double)
+    + calculateEnergy(flowOfWater: double): double
+}
+
+class AirEnergy {
+    - windSpeed: double
+    + AirEnergy(windSpeed: double)
+    + calculateEnergy(airTemperature: double): double
+}
+
+class SolarEnergy {
+    - timeOfDayLight: double
+    + SolarEnergy(timeOfDayLight: double)
+    + calculateEnergy(solarPanelSize: double): double
+}
+
+class HeatEnergy {
+    - heatTemperature: double
+    - time: int
+    + HeatEnergy(heatTemperature: double, time: int)
+    + calculateEnergy(heatGeneratedOverTime: double): double
+}
+
+Energy <|.. WaterEnergy
+Energy <|.. AirEnergy
+Energy <|.. SolarEnergy
+Energy <|.. HeatEnergy
+
+class EnergySelectionWindow {
+    - energyStatsMap: EnergyTypeStatsMap
+    - energyTypeComboBox: JComboBox<String>
+    - specificInputLabel: JLabel
+    - specificValueField: JTextField
+    - perMinuteRadioButton: JRadioButton
+    - perHourRadioButton: JRadioButton
+    - perDayRadioButton: JRadioButton
+    - perMonthRadioButton: JRadioButton
+    - perYearRadioButton: JRadioButton
+    - timeButtonGroup: ButtonGroup
+    - outputTextArea: JTextArea
+    - calculateButton: JButton
+    + EnergySelectionWindow()
+    - initializeComponents()
+    - updateSpecificInputLabel()
+    - getSpecificInputLabel(energyType: String): String
+    - getTimeSelection(): String
+    - handleEnergyCalculation(selectedEnergy: String, specificValue: double, timeSelection: String): String
+    - calculateFlowBasedOnTime(specificValue: double, timeSelection: String): double
+    - calculateTemperatureBasedOnTime(specificValue: double, timeSelection: String): double
+    - calculatePanelSizeBasedOnTime(specificValue: double, timeSelection: String): double
+    - getTimeInHours(timeSelection: String): int
+    - getDoubleInput(message: String): double
+    - updateAverageEnergy(energyType: String, energyValue: double): void
+    + showWindow(): void
+}
+
+class EnergyTypeStats {
+    - totalEnergy: double
+    - count: int
+    + EnergyTypeStats()
+    + addEnergyValue(energyValue: double): void
+    + getAverageEnergy(): double
+}
+
+class EnergyTypeStatsMap {
+    - energyStatsMap: Map<String, EnergyTypeStats>
+    + EnergyTypeStatsMap()
+    + getEnergyTypeStats(energyType: String): EnergyTypeStats
+}
+
+EnergySelectionWindow --> EnergyTypeStatsMap
+
+@enduml
