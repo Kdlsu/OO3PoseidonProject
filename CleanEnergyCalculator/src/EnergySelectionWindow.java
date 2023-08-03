@@ -7,7 +7,8 @@ public class EnergySelectionWindow extends JFrame {
     private JComboBox<String> energyTypeComboBox;
     private JButton calculateButton;
     private JTextArea outputTextArea;
-    private JTextField powerInputField;
+    private JTextField specificValueField;
+    private JLabel specificInputLabel;
     private JRadioButton perMinuteRadioButton;
     private JRadioButton perHourRadioButton;
     private JRadioButton perDayRadioButton;
@@ -28,11 +29,20 @@ public class EnergySelectionWindow extends JFrame {
 
     private void initializeComponents() {
         energyTypeComboBox = new JComboBox<>(new String[]{"Water", "Air", "Solar", "Heat"});
+        energyTypeComboBox.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                updateSpecificInputLabel();
+            }
+        });
+        add(new JLabel("Select Energy Type:"));
         add(energyTypeComboBox);
 
-        powerInputField = new JTextField(10);
-        add(new JLabel("Power Generated:"));
-        add(powerInputField);
+        specificInputLabel = new JLabel();
+        specificValueField = new JTextField(10);
+        updateSpecificInputLabel(); // Update the specific input label initially based on the selected energy
+        add(specificInputLabel);
+        add(specificValueField);
 
         perMinuteRadioButton = new JRadioButton("Per Minute");
         perHourRadioButton = new JRadioButton("Per Hour");
@@ -40,7 +50,6 @@ public class EnergySelectionWindow extends JFrame {
         perMonthRadioButton = new JRadioButton("Per Month");
         perYearRadioButton = new JRadioButton("Per Year");
 
-        // Add radio buttons to a button group, so only one can be selected at a time
         timeButtonGroup = new ButtonGroup();
         timeButtonGroup.add(perMinuteRadioButton);
         timeButtonGroup.add(perHourRadioButton);
@@ -48,7 +57,6 @@ public class EnergySelectionWindow extends JFrame {
         timeButtonGroup.add(perMonthRadioButton);
         timeButtonGroup.add(perYearRadioButton);
 
-        // Set "Per Hour" as the default selection
         perHourRadioButton.setSelected(true);
 
         JPanel radioPanel = new JPanel(new GridLayout(5, 1));
@@ -64,27 +72,45 @@ public class EnergySelectionWindow extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 String selectedEnergy = (String) energyTypeComboBox.getSelectedItem();
-                double power = Double.parseDouble(powerInputField.getText());
+                double specificValue = Double.parseDouble(specificValueField.getText());
                 String timeSelection = getTimeSelection();
-                String result = handleEnergyCalculation(selectedEnergy, power, timeSelection);
-                outputTextArea.setText(result); // Set the result text in the output text area
+                String result = handleEnergyCalculation(selectedEnergy, specificValue, timeSelection);
+                outputTextArea.setText(result);
             }
         });
         add(calculateButton);
 
-        // Initialize and add the output text area
         outputTextArea = new JTextArea(10, 30);
         outputTextArea.setEditable(false);
         JScrollPane scrollPane = new JScrollPane(outputTextArea);
         add(scrollPane);
 
-        // Display the average energy of each energy type
         JLabel averageEnergyLabel = new JLabel("Average Energy:");
         add(averageEnergyLabel);
         add(new JLabel("Water: 0.0"));
         add(new JLabel("Air: 0.0"));
         add(new JLabel("Solar: 0.0"));
         add(new JLabel("Heat: 0.0"));
+    }
+
+    private void updateSpecificInputLabel() {
+        String selectedEnergy = (String) energyTypeComboBox.getSelectedItem();
+        specificInputLabel.setText("Enter " + getSpecificInputLabel(selectedEnergy) + ":");
+    }
+
+    private String getSpecificInputLabel(String energyType) {
+        switch (energyType) {
+            case "Water":
+                return "Water Wheel Size";
+            case "Air":
+                return "Wind Speed";
+            case "Solar":
+                return "Time of Daylight";
+            case "Heat":
+                return "Heat Temperature";
+            default:
+                return "Specific Value";
+        }
     }
 
     private String getTimeSelection() {
@@ -103,40 +129,34 @@ public class EnergySelectionWindow extends JFrame {
         }
     }
 
-    private String handleEnergyCalculation(String selectedEnergy, double power, String timeSelection) {
-        // Perform the energy calculations and return the result as a string
+    private String handleEnergyCalculation(String selectedEnergy, double specificValue, String timeSelection) {
         switch (selectedEnergy) {
             case "Water":
-                double waterWheelSize = getDoubleInput("Enter Water Wheel Size:");
-                WaterEnergy waterEnergy = new WaterEnergy(waterWheelSize);
-                double flowOfWater = calculateFlowBasedOnTime(power, timeSelection);
+                WaterEnergy waterEnergy = new WaterEnergy(specificValue);
+                double flowOfWater = calculateFlowBasedOnTime(specificValue, timeSelection);
                 double waterEnergyResult = waterEnergy.calculateEnergy(flowOfWater);
-                updateAverageEnergy("Water", waterEnergyResult); // Update the average energy display
+                updateAverageEnergy("Water", waterEnergyResult);
                 return "Water Energy: " + waterEnergyResult;
 
             case "Air":
-                double windSpeed = getDoubleInput("Enter Wind Speed:");
-                AirEnergy airEnergy = new AirEnergy(windSpeed);
-                double airTemperature = calculateTemperatureBasedOnTime(power, timeSelection);
+                AirEnergy airEnergy = new AirEnergy(specificValue);
+                double airTemperature = calculateTemperatureBasedOnTime(specificValue, timeSelection);
                 double airEnergyResult = airEnergy.calculateEnergy(airTemperature);
-                updateAverageEnergy("Air", airEnergyResult); // Update the average energy display
+                updateAverageEnergy("Air", airEnergyResult);
                 return "Air Energy: " + airEnergyResult;
 
             case "Solar":
-                double timeOfDayLight = getDoubleInput("Enter Time of Daylight:");
-                SolarEnergy solarEnergy = new SolarEnergy(timeOfDayLight);
-                double solarPanelSize = calculatePanelSizeBasedOnTime(power, timeSelection);
+                SolarEnergy solarEnergy = new SolarEnergy(specificValue);
+                double solarPanelSize = calculatePanelSizeBasedOnTime(specificValue, timeSelection);
                 double solarEnergyResult = solarEnergy.calculateEnergy(solarPanelSize);
-                updateAverageEnergy("Solar", solarEnergyResult); // Update the average energy display
+                updateAverageEnergy("Solar", solarEnergyResult);
                 return "Solar Energy: " + solarEnergyResult;
 
             case "Heat":
-                double heatTemperature = getDoubleInput("Enter Heat Temperature:");
-                int time = calculateTimeInHours(power, timeSelection);
-                HeatEnergy heatEnergy = new HeatEnergy(heatTemperature, time);
+                HeatEnergy heatEnergy = new HeatEnergy(specificValue, getTimeInHours(timeSelection));
                 double heatGeneratedOverTime = getDoubleInput("Enter Heat Generated Over Time:");
                 double heatEnergyResult = heatEnergy.calculateEnergy(heatGeneratedOverTime);
-                updateAverageEnergy("Heat", heatEnergyResult); // Update the average energy display
+                updateAverageEnergy("Heat", heatEnergyResult);
                 return "Heat Energy: " + heatEnergyResult;
 
             default:
@@ -144,64 +164,62 @@ public class EnergySelectionWindow extends JFrame {
         }
     }
 
-    // Utility methods to convert power to specific units based on time
-    private double calculateFlowBasedOnTime(double power, String timeSelection) {
+    private double calculateFlowBasedOnTime(double specificValue, String timeSelection) {
         // Implement conversion based on time (per minute, per hour, etc.)
         if (timeSelection.equals("Minute")) {
-            return power / 60.0;
+            return specificValue / 60.0;
         } else if (timeSelection.equals("Day")) {
-            return power * 24.0;
+            return specificValue * 24.0;
         } else if (timeSelection.equals("Month")) {
-            return power * 24.0 * 30.0;
+            return specificValue * 24.0 * 30.0;
         } else if (timeSelection.equals("Year")) {
-            return power * 24.0 * 365.0;
+            return specificValue * 24.0 * 365.0;
         } else {
-            return power;
+            return specificValue;
         }
     }
 
-    private double calculateTemperatureBasedOnTime(double power, String timeSelection) {
+    private double calculateTemperatureBasedOnTime(double specificValue, String timeSelection) {
         // Implement conversion based on time (per minute, per hour, etc.)
         if (timeSelection.equals("Minute")) {
-            return power / 60.0;
+            return specificValue / 60.0;
         } else if (timeSelection.equals("Day")) {
-            return power * 24.0;
+            return specificValue * 24.0;
         } else if (timeSelection.equals("Month")) {
-            return power * 24.0 * 30.0;
+            return specificValue * 24.0 * 30.0;
         } else if (timeSelection.equals("Year")) {
-            return power * 24.0 * 365.0;
+            return specificValue * 24.0 * 365.0;
         } else {
-            return power;
+            return specificValue;
         }
     }
 
-    private double calculatePanelSizeBasedOnTime(double power, String timeSelection) {
+    private double calculatePanelSizeBasedOnTime(double specificValue, String timeSelection) {
         // Implement conversion based on time (per minute, per hour, etc.)
         if (timeSelection.equals("Minute")) {
-            return power / 60.0;
+            return specificValue / 60.0;
         } else if (timeSelection.equals("Day")) {
-            return power * 24.0;
+            return specificValue * 24.0;
         } else if (timeSelection.equals("Month")) {
-            return power * 24.0 * 30.0;
+            return specificValue * 24.0 * 30.0;
         } else if (timeSelection.equals("Year")) {
-            return power * 24.0 * 365.0;
+            return specificValue * 24.0 * 365.0;
         } else {
-            return power;
+            return specificValue;
         }
     }
 
-    private int calculateTimeInHours(double power, String timeSelection) {
-        // Convert time to hours
+    private int getTimeInHours(String timeSelection) {
         if (timeSelection.equals("Minute")) {
-            return (int) (power / 60.0);
+            return 1;
         } else if (timeSelection.equals("Hour")) {
-            return (int) power;
+            return 1;
         } else if (timeSelection.equals("Day")) {
-            return (int) (power * 24.0);
+            return 24;
         } else if (timeSelection.equals("Month")) {
-            return (int) (power * 24.0 * 30.0);
+            return 24 * 30;
         } else if (timeSelection.equals("Year")) {
-            return (int) (power * 24.0 * 365.0);
+            return 24 * 365;
         } else {
             return 0;
         }
@@ -210,7 +228,6 @@ public class EnergySelectionWindow extends JFrame {
     private double getDoubleInput(String message) {
         String input = JOptionPane.showInputDialog(this, message);
         if (input == null) {
-            // User clicked cancel or closed the input dialog
             return 0.0;
         }
         try {
@@ -221,7 +238,6 @@ public class EnergySelectionWindow extends JFrame {
         }
     }
 
-    // Update the average energy display for each energy type
     private void updateAverageEnergy(String energyType, double energyValue) {
         EnergyTypeStats energyTypeStats = energyStatsMap.getEnergyTypeStats(energyType);
         energyTypeStats.addEnergyValue(energyValue);
@@ -241,4 +257,6 @@ public class EnergySelectionWindow extends JFrame {
     public void showWindow() {
         setVisible(true);
     }
+
+
 }

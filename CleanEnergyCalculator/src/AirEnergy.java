@@ -11,4 +11,3 @@ public class AirEnergy {
         return windSpeed * airTemperature;
     }
 }
-

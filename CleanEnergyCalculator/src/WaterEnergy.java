@@ -11,3 +11,4 @@ public class WaterEnergy {
         return flowOfWater * waterWheelSize;
     }
 }
+

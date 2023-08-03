@@ -11,4 +11,3 @@ public class SolarEnergy {
         return timeOfDayLight * solarPanelSize;
     }
 }
-
