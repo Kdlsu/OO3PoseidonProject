@@ -15,3 +15,5 @@ Energy includes: Water, Air, Solar, Heat
 Calculate by: Water wheel size, Wind speed, Time of daylight, Temperature, Heat generated over time
 
 By time: Hours, Minutes, Day, Months, Years
+
+Youtube Link for the demo: https://www.youtube.com/watch?v=EHuBXigQ-EU
